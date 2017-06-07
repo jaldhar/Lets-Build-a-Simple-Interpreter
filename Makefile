@@ -13,10 +13,13 @@ LDFLAGS=
 .cc.o:
 	$(CXX) $(CXXFLAGS) -c -o $@ $^
 
-all: calc1
+all: calc1 calc2
 
 calc1: calc1.o
 	$(CXX) $(LDFLAGS) -o $@ $<
 
+calc2: calc2.o
+	$(CXX) $(LDFLAGS) -o $@ $<
+
 clean:
-	-rm calc1 *.o
+	-rm calc1 calc2 *.o
