@@ -1,4 +1,4 @@
-// interp.cc -- c++ port of Ruslan Spivaks "Let's Build a Simple Interpreter"
+// calc1.cc -- c++ port of Ruslan Spivaks "Let's Build a Simple Interpreter"
 //              tutorial.
 //
 // By Jaldhar H. Vyas <jaldhar@braincells.com>
