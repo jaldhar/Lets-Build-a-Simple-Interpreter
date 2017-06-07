@@ -17,7 +17,8 @@ enum class TOKENTYPE {
                    // ENDOFFILE token is used to indicate that
                    // there is no more input left for lexical analysis
     INTEGER,
-    PLUS
+    PLUS,
+    MINUS
 };
 
 ostream& operator<<(ostream& out, const TOKENTYPE& t) {
@@ -31,6 +32,9 @@ ostream& operator<<(ostream& out, const TOKENTYPE& t) {
             break;
         case TOKENTYPE::PLUS:
             repr = "PLUS";
+            break;
+        case TOKENTYPE::MINUS:
+            repr = "MINUS";
             break;
     }
 
@@ -70,6 +74,8 @@ private:
 
     void  eat(TOKENTYPE token_type);
     Token get_next_token();
+    long  minus(long left_value);
+    long  plus(long left_value);
 };
 
 // Constructor
@@ -77,29 +83,29 @@ Interpreter::Interpreter(string& text) : _text{text}, _pos{0},
 _current_token{TOKENTYPE::ENDOFFILE, 0} {
 }
 
-// expr -> INTEGER PLUS INTEGER
+// expr -> INTEGER [PLUS|MINUS] INTEGER
 long Interpreter::expression() {
 
     // set current token to the first token taken from the input
     _current_token = get_next_token();
 
-    // we expect the current token to be a single-digit integer
+    // we expect the current token to be an integer
     Token left = _current_token;
     eat(TOKENTYPE::INTEGER);
 
-    // we expect the current token to be a '+' token
+    // we expect the current token to be a '+' or '-' token
     Token op = _current_token;
-    eat(TOKENTYPE::PLUS);
+    if (op.type == TOKENTYPE::PLUS) {
+        eat(TOKENTYPE::PLUS);
+        return plus(left.value);
+    }
 
-    // we expect the current token to be a single-digit integer
-    Token right = _current_token;
-    eat(TOKENTYPE::INTEGER);
-    // after the above call _current_token is set to ENDOFFILE token
+    if (op.type == TOKENTYPE::MINUS) {
+        eat(TOKENTYPE::MINUS);
+        return minus(left.value);
+    }
 
-    // at this point INTEGER PLUS INTEGER sequence of tokens has been
-    // successfully found and the method can just return the result of adding
-    // two integers, thus effectively interpreting client input
-    return left.value + right.value;
+    return 0L; // An exception should have been thrown before we ever get here.
 }
 
 // compare the current token type with the passed token type and if they match
@@ -156,9 +162,40 @@ Token Interpreter::get_next_token() {
         return token;
     }
 
+    if (current_char == '-') {
+        Token token(TOKENTYPE::MINUS, '-');
+        cerr << token << endl;
+        _pos++;
+        return token;
+    }
+
     ostringstream out;
     out << "Error parsing input. Got: " << current_char;
     throw(out.str().c_str());
+}
+
+long Interpreter::minus(long left_value) {
+    // we expect the current token to be an integer
+    Token right = _current_token;
+    eat(TOKENTYPE::INTEGER);
+    // after the above call _current_token is set to ENDOFFILE token
+
+    // at this point INTEGER MINUS INTEGER sequence of tokens has been
+    // successfully found and the method can just return the result of
+    // subtracting two integers, thus effectively interpreting client input
+    return left_value - right.value;
+}
+
+long Interpreter::plus(long left_value) {
+    // we expect the current token to be an integer
+    Token right = _current_token;
+    eat(TOKENTYPE::INTEGER);
+    // after the above call _current_token is set to ENDOFFILE token
+
+    // at this point INTEGER PLUS INTEGER sequence of tokens has been
+    // successfully found and the method can just return the result of adding
+    // two integers, thus effectively interpreting client input
+    return left_value + right.value;
 }
 
 int main() {
