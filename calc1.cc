@@ -5,6 +5,7 @@
 // Copyright (C) 2017, Consolidated Braincells Inc.  All rights reserved.
 // "Do what thou wilt shall be the whole of the license."
 
+#include <cctype>
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
