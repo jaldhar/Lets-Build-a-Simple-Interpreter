@@ -127,6 +127,11 @@ void Interpreter::eat(TOKENTYPE token_type) {
 // token at a time.
 //
 Token Interpreter::get_next_token() {
+    // Skip leading white space.
+    while (_pos < _text.length() && isspace(_text[_pos])) {
+        _pos++;
+    }
+
     // is _pos index past the end of _text ?
     // if so, then return ENDOFFILE token because there is no more
     // input left to convert into tokens
