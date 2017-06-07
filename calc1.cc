@@ -12,7 +12,6 @@
 using namespace std;
 
 // Token types
-// Remember to update Token operator<< when you add here.
 enum class TOKENTYPE {
     ENDOFFILE = 0, // EOF can't be used as it is already defined in std
                    // ENDOFFILE token is used to indicate that
@@ -41,11 +40,11 @@ ostream& operator<<(ostream& out, const TOKENTYPE& t) {
 
 
 struct Token {
-    Token(TOKENTYPE t, char v) : type{t}, value{v} {
+    Token(TOKENTYPE t, long v) : type{t}, value{v} {
     }
 
     TOKENTYPE       type;   // token type: INTEGER, PLUS, or EOF
-    char            value;  // token value: 0, 1, 2. 3, 4, 5, 6, 7, 8, 9, or '+'
+    long            value;  // token value: long int or '+'
 
     friend ostream& operator<<(ostream& out, const Token& t);
 };
@@ -56,14 +55,14 @@ struct Token {
 //      Token(PLUS '+')
 //
 ostream& operator<<(ostream& out, const Token& t) {
-    out << "Token(" << t.type << "," << t.value << ")";
+    out << "Token(" << t.type << "," << (long)t.value << ")";
     return out;
 }
 
 class Interpreter {
 public:
     Interpreter(string& text);
-    int expression();
+    long expression();
 private:
     string& _text;          // client string input, e.g. "3+5"
     size_t  _pos;           // an index into _text
@@ -79,7 +78,7 @@ _current_token{TOKENTYPE::ENDOFFILE, 0} {
 }
 
 // expr -> INTEGER PLUS INTEGER
-int Interpreter::expression() {
+long Interpreter::expression() {
 
     // set current token to the first token taken from the input
     _current_token = get_next_token();
@@ -135,13 +134,18 @@ Token Interpreter::get_next_token() {
     // based on the single character
     char current_char = _text[_pos];
 
-    // if the character is a digit then convert it to integer, create an INTEGER
-    // token, increment _pos index to point to the next character after the
-    // digit, and return the INTEGER token
+    // if the next characters are digits then convert them to an integer, create
+    // an INTEGER token, increment _pos index to point to the next character
+    // after the digits, and return the INTEGER token
     if (isdigit(current_char)) {
-        Token token(TOKENTYPE::INTEGER, current_char - '0');
+        long total = 0;
+        while (isdigit(_text[_pos])) {
+            total *= 10;
+            total += (_text[_pos] - '0');
+            _pos++;
+        }
+        Token token(TOKENTYPE::INTEGER, total);
         cerr << token << endl;
-        _pos++;
         return token;
     }
 
@@ -166,7 +170,7 @@ int main() {
 
         try {
             Interpreter interpreter(text);
-            int result = interpreter.expression();
+            long result = interpreter.expression();
             cout << result << endl;
         }
         catch(const char* error) {
