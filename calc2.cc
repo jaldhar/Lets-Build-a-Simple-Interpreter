@@ -73,11 +73,13 @@ private:
     char    _current_char;  // the character at _text[_pos]
     Token   _current_token; // current token instance
 
+    long  add(long left_value);
     void  advance();
     void  eat(TOKENTYPE token_type);
     Token get_next_token();
     long  integer();
     void  skip_whitespace();
+    long  subtract(long left_value);
 };
 
 // Constructor
@@ -98,28 +100,33 @@ long Interpreter::expression() {
     Token left = _current_token;
     eat(TOKENTYPE::INTEGER);
 
-    // we expect the current token to be a '+' or '-' token
-    Token op = _current_token;
-    if (op.type == TOKENTYPE::PLUS) {
-        eat(TOKENTYPE::PLUS);
-    } else {
-        eat(TOKENTYPE::MINUS);
+    long result = left.value;
+    // loop while we still have tokens
+    while(_current_token.type != TOKENTYPE::ENDOFFILE) {
+        // we expect the current token to be a '+' or '-' token
+        Token op = _current_token;
+        if (op.type == TOKENTYPE::PLUS) {
+            eat(TOKENTYPE::PLUS);
+            result = add(result);
+        } else {
+            eat(TOKENTYPE::MINUS);
+            result = subtract(result);
+        }
     }
 
+    return result;
+}
+
+long Interpreter::add(long left_value) {
     // we expect the current token to be an integer
     Token right = _current_token;
     eat(TOKENTYPE::INTEGER);
     // after the above call _current_token is set to ENDOFFILE token
 
-    // at this point either the INTEGER PLUS INTEGER or the INTEGER MINUS
-    // INTEGER sequence of tokens has been successfully found and the method can
-    // just return the result of adding or subtracting two integers, thus
-    // effectively interpreting client input
-    if (op.type == TOKENTYPE::PLUS) {
-        return left.value + right.value;
-    } else {
-        return left.value - right.value;
-    }
+    // at this point INTEGER PLUS INTEGER sequence of tokens has been
+    // successfully found and the method can just return the result of adding
+    // two integers, thus effectively interpreting client input
+    return left_value + right.value;
 }
 
 // Advance the '_pos' pointer and set the '_current_char' variable.
@@ -205,6 +212,18 @@ void Interpreter::skip_whitespace() {
     while (_current_char != '\0' && isspace(_current_char)) {
         advance();
     }
+}
+
+long Interpreter::subtract(long left_value) {
+    // we expect the current token to be an integer
+    Token right = _current_token;
+    eat(TOKENTYPE::INTEGER);
+    // after the above call _current_token is set to ENDOFFILE token
+
+    // at this point INTEGER MINUS INTEGER sequence of tokens has been
+    // successfully found and the method can just return the result of
+    // subtracting two integers, thus effectively interpreting client input
+    return left_value - right.value;
 }
 
 int main() {
