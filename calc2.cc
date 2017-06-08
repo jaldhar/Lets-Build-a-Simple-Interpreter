@@ -20,7 +20,8 @@ enum class TOKENTYPE {
     INTEGER,
     PLUS,
     MINUS,
-    TIMES
+    TIMES,
+    DIVIDE
 };
 
 ostream& operator<<(ostream& out, const TOKENTYPE& t) {
@@ -40,6 +41,9 @@ ostream& operator<<(ostream& out, const TOKENTYPE& t) {
             break;
         case TOKENTYPE::TIMES:
             repr = "TIMES";
+            break;
+        case TOKENTYPE::DIVIDE:
+            repr = "DIVIDE";
             break;
     }
 
@@ -79,6 +83,7 @@ private:
 
     long  add(long left_value);
     void  advance();
+    long  divide(long left_value);
     void  eat(TOKENTYPE token_type);
     Token get_next_token();
     long  integer();
@@ -97,6 +102,7 @@ _current_char{_text[_pos]}, _current_token{TOKENTYPE::ENDOFFILE, 0} {
 // expr -> INTEGER PLUS INTEGER
 // expr -> INTEGER MINUS INTEGER
 // expr -> INTEGER TIMES INTEGER
+// expr -> INTEGER DIVIDE INTEGER
 long Interpreter::expression() {
 
     // set current token to the first token taken from the input
@@ -122,6 +128,10 @@ long Interpreter::expression() {
         case TOKENTYPE::TIMES:
             eat(TOKENTYPE::TIMES);
             result = multiply(result);
+            break;
+        case TOKENTYPE::DIVIDE:
+            eat(TOKENTYPE::DIVIDE);
+            result = divide(result);
             break;
         case TOKENTYPE::ENDOFFILE:
             break;
@@ -156,6 +166,23 @@ void Interpreter::advance() {
     } else {
         _current_char = _text[_pos];
     }
+}
+
+long  Interpreter::divide(long left_value) {
+    // we expect the current token to be an integer
+    Token right = _current_token;
+    eat(TOKENTYPE::INTEGER);
+
+    // Handle division by 0
+    if (right.value == 0) {
+        throw("Division by zero");
+    }
+    // after the above call _current_token is set to ENDOFFILE token
+
+    // at this point INTEGER TIMES INTEGER sequence of tokens has been
+    // successfully found and the method can just return the result of
+    // dividing two integers, thus effectively interpreting client input
+    return left_value / right.value;
 }
 
 // compare the current token type with the passed token type and if they match
@@ -207,6 +234,13 @@ Token Interpreter::get_next_token() {
         if (_current_char == '*') {
             advance();
             Token token(TOKENTYPE::TIMES, '*');
+            cerr << token << endl;
+            return token;
+        }
+
+        if (_current_char == '/') {
+            advance();
+            Token token(TOKENTYPE::DIVIDE, '/');
             cerr << token << endl;
             return token;
         }
