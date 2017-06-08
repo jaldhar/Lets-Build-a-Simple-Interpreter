@@ -19,7 +19,8 @@ enum class TOKENTYPE {
                    // there is no more input left for lexical analysis
     INTEGER,
     PLUS,
-    MINUS
+    MINUS,
+    TIMES
 };
 
 ostream& operator<<(ostream& out, const TOKENTYPE& t) {
@@ -36,6 +37,9 @@ ostream& operator<<(ostream& out, const TOKENTYPE& t) {
             break;
         case TOKENTYPE::MINUS:
             repr = "MINUS";
+            break;
+        case TOKENTYPE::TIMES:
+            repr = "TIMES";
             break;
     }
 
@@ -78,6 +82,7 @@ private:
     void  eat(TOKENTYPE token_type);
     Token get_next_token();
     long  integer();
+    long  multiply(long left_value);
     void  skip_whitespace();
     long  subtract(long left_value);
 };
@@ -91,6 +96,7 @@ _current_char{_text[_pos]}, _current_token{TOKENTYPE::ENDOFFILE, 0} {
 //
 // expr -> INTEGER PLUS INTEGER
 // expr -> INTEGER MINUS INTEGER
+// expr -> INTEGER TIMES INTEGER
 long Interpreter::expression() {
 
     // set current token to the first token taken from the input
@@ -103,14 +109,27 @@ long Interpreter::expression() {
     long result = left.value;
     // loop while we still have tokens
     while(_current_token.type != TOKENTYPE::ENDOFFILE) {
-        // we expect the current token to be a '+' or '-' token
-        Token op = _current_token;
-        if (op.type == TOKENTYPE::PLUS) {
-            eat(TOKENTYPE::PLUS);
-            result = add(result);
-        } else {
+        // we expect the current token to be an operator token
+        switch(_current_token.type) {
+        case TOKENTYPE::MINUS:
             eat(TOKENTYPE::MINUS);
             result = subtract(result);
+            break;
+        case TOKENTYPE::PLUS:
+            eat(TOKENTYPE::PLUS);
+            result = add(result);
+            break;
+        case TOKENTYPE::TIMES:
+            eat(TOKENTYPE::TIMES);
+            result = multiply(result);
+            break;
+        case TOKENTYPE::ENDOFFILE:
+            break;
+        default:
+            ostringstream out;
+            out << "Error parsing input. Wanted operator, got: "
+                << _current_token.type;
+            throw(out.str().c_str());
         }
     }
 
@@ -185,6 +204,13 @@ Token Interpreter::get_next_token() {
             return token;
         }
 
+        if (_current_char == '*') {
+            advance();
+            Token token(TOKENTYPE::TIMES, '*');
+            cerr << token << endl;
+            return token;
+        }
+
         ostringstream out;
         out << "Error parsing input. Got: " << _current_char;
         throw(out.str().c_str());
@@ -205,6 +231,18 @@ long Interpreter::integer() {
     }
 
     return stol(result);
+}
+
+long  Interpreter::multiply(long left_value) {
+    // we expect the current token to be an integer
+    Token right = _current_token;
+    eat(TOKENTYPE::INTEGER);
+    // after the above call _current_token is set to ENDOFFILE token
+
+    // at this point INTEGER TIMES INTEGER sequence of tokens has been
+    // successfully found and the method can just return the result of
+    // multiplying two integers, thus effectively interpreting client input
+    return left_value * right.value;
 }
 
 // Skip leading white space.
