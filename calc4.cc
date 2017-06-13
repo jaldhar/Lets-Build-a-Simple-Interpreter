@@ -18,6 +18,8 @@ enum class TOKENTYPE {
                    // ENDOFFILE token is used to indicate that
                    // there is no more input left for lexical analysis
     INTEGER,
+    PLUS,
+    MINUS,
     MUL,
     DIV
 };
@@ -30,6 +32,12 @@ ostream& operator<<(ostream& out, const TOKENTYPE& t) {
             break;
         case TOKENTYPE::INTEGER:
             repr = "INTEGER";
+            break;
+        case TOKENTYPE::PLUS:
+            repr = "PLUS";
+            break;
+        case TOKENTYPE::MINUS:
+            repr = "MINUS";
             break;
         case TOKENTYPE::MUL:
             repr = "MUL";
@@ -115,6 +123,20 @@ Token Lexer::get_next_token() {
             return token;
         }
 
+        if (_current_char == '+') {
+            advance();
+            Token token(TOKENTYPE::PLUS, '+');
+            cerr << token << endl;
+            return token;
+        }
+
+        if (_current_char == '-') {
+            advance();
+            Token token(TOKENTYPE::MINUS, '-');
+            cerr << token << endl;
+            return token;
+        }
+
         ostringstream out;
         out << "Error parsing input. Got: " << _current_char;
         throw(out.str().c_str());
@@ -172,14 +194,16 @@ _current_token{_lexer.get_next_token()} {
 }
 
 // Arithmetic expression parser / interpreter.
-// expr   : factor ((MUL | DIV) factor)*
+// expr   : factor ((MUL | DIV | PLUS | MINUS) factor)*
 // factor : INTEGER
 
 long Interpreter::expression() {
     long result = factor();
 
     while (_current_token.type == TOKENTYPE::MUL ||
-    _current_token.type == TOKENTYPE::DIV) {
+    _current_token.type == TOKENTYPE::DIV ||
+    _current_token.type == TOKENTYPE::PLUS ||
+    _current_token.type == TOKENTYPE::MINUS) {
         Token token = _current_token;
         if (token.type == TOKENTYPE::MUL) {
             eat(TOKENTYPE::MUL);
@@ -187,6 +211,12 @@ long Interpreter::expression() {
         } else if (token.type == TOKENTYPE::DIV) {
             eat(TOKENTYPE::DIV);
             result /= factor();
+        } else if (token.type == TOKENTYPE::PLUS) {
+            eat(TOKENTYPE::PLUS);
+            result += factor();
+        } else if (token.type == TOKENTYPE::MINUS) {
+            eat(TOKENTYPE::MINUS);
+            result -= factor();
         }
     }
 
