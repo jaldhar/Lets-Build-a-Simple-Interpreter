@@ -210,7 +210,11 @@ long Interpreter::expression() {
             result *= factor();
         } else if (token.type == TOKENTYPE::DIV) {
             eat(TOKENTYPE::DIV);
-            result /= factor();
+            long rhs = factor();
+            if (rhs == 0) {
+                throw("Division by zero");
+            }
+            result /= rhs;
         } else if (token.type == TOKENTYPE::PLUS) {
             eat(TOKENTYPE::PLUS);
             result += factor();
