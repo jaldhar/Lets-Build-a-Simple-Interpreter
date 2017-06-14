@@ -13,7 +13,7 @@ LDFLAGS=
 .cc.o:
 	$(CXX) $(CXXFLAGS) -c -o $@ $^
 
-all: calc1 calc2 calc3 calc4
+all: calc1 calc2 calc3 calc4 calc5
 
 calc1: calc1.o
 	$(CXX) $(LDFLAGS) -o $@ $<
@@ -27,5 +27,8 @@ calc3: calc3.o
 calc4: calc4.o
 	$(CXX) $(LDFLAGS) -o $@ $<
 
+calc5: calc5.o
+	$(CXX) $(LDFLAGS) -o $@ $<
+
 clean:
-	-rm calc1 calc2 calc3 calc4 *.o
+	-rm calc1 calc2 calc3 calc4 calc5 *.o
