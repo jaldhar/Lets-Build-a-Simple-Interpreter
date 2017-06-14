@@ -248,7 +248,11 @@ long Interpreter::term() {
             result *= factor();
         } else if (token.type == TOKENTYPE::DIV) {
             eat(TOKENTYPE::DIV);
-            result /= factor();
+            long rhs = factor();
+            if (rhs == 0) {
+                throw("Division by zero");
+            }
+            result /= rhs;
         }
     }
 
