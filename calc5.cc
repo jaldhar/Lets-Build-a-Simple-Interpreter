@@ -21,7 +21,9 @@ enum class TOKENTYPE {
     PLUS,
     MINUS,
     MUL,
-    DIV
+    DIV,
+    LPAREN,
+    RPAREN
 };
 
 ostream& operator<<(ostream& out, const TOKENTYPE& t) {
@@ -44,6 +46,12 @@ ostream& operator<<(ostream& out, const TOKENTYPE& t) {
             break;
         case TOKENTYPE::DIV:
             repr = "DIV";
+            break;
+        case TOKENTYPE::LPAREN:
+            repr = "LPAREN";
+            break;
+        case TOKENTYPE::RPAREN:
+            repr = "RPAREN";
             break;
     }
 
@@ -137,6 +145,20 @@ Token Lexer::get_next_token() {
             return token;
         }
 
+        if (_current_char == '(') {
+            advance();
+            Token token(TOKENTYPE::LPAREN, '(');
+            cerr << token << endl;
+            return token;
+        }
+
+        if (_current_char == ')') {
+            advance();
+            Token token(TOKENTYPE::RPAREN, ')');
+            cerr << token << endl;
+            return token;
+        }
+
         ostringstream out;
         out << "Error parsing input. Got: " << _current_char;
         throw(out.str().c_str());
@@ -195,9 +217,9 @@ _current_token{_lexer.get_next_token()} {
 }
 
 // Arithmetic expression parser / interpreter.
-// expr   : term ((PLUS | MINUS) term)*
-// term   : factor ((MUL | DIV) factor)*
-// factor : INTEGER
+// expr    : term ((PLUS | MINUS) term)*
+// term    : factor ((MUL | DIV) factor)*
+// factor  : INTEGER | LPAREN expr RPAREN
 long Interpreter::expression() {
     long result = term();
 
@@ -229,11 +251,18 @@ void Interpreter::eat(TOKENTYPE token_type) {
     }
 }
 
-// factor : INTEGER
+// factor : INTEGER | LPAREN expr RPAREN
 long Interpreter::factor() {
     Token token = _current_token;
-    eat(TOKENTYPE::INTEGER);
-    return token.value;
+    if (token.type == TOKENTYPE::LPAREN) {
+        eat(TOKENTYPE::LPAREN);
+        long result = expression();
+        eat(TOKENTYPE::RPAREN);
+        return result;
+    } else {
+        eat(TOKENTYPE::INTEGER);
+        return token.value;
+    }
 }
 
 // term : factor ((MUL | DIV) factor)*
